@@ -1,0 +1,24 @@
+body {
+  margin: 0;
+  min-width: 380px;
+  min-height: 100vh;
+  border: 0;
+}
+
+
+/*
+* 重写 antd 样式
+*/
+@media (max-width: 575px) {
+  :where(.css-dev-only-do-not-override-usln0u).ant-form:not(.ant-form-inline) .ant-form-item .ant-form-item-label:not([class*=" ant-col-xs"]) {
+    flex: unset;
+    width: 50px;
+    max-width: auto;
+  }
+
+  :where(.css-dev-only-do-not-override-usln0u).ant-form:not(.ant-form-inline) .ant-form-item .ant-form-item-control:not([class*=" ant-col-xs"]) {
+    flex: auto;
+    max-width: 100%;
+    flex: 1
+  }
+}
