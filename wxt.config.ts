@@ -9,7 +9,14 @@ export default defineConfig({
   manifest: {
     "permissions": [
         "tabs",
-        "bookmarks"
+        "bookmarks",
+        "storage",
+        "scripting",
+        "activeTab",
+        "actions"
     ],
+    "action": {
+      "default_popup": "popup.html"
+    }
   }
 });
