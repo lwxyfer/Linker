@@ -38,8 +38,11 @@ export const handleUpdate = async (newValue, oldValue) => {
 
 
 export const handleSearch = async (url) => {
-    const res = await bookmarkPro.searchFirst(url)
-    return res
+    if (url) {
+        const res = await bookmarkPro.searchFirst(url)
+        return res
+    }
+    return {}
 }
 
 export const handleRemove = async (bookmarkId: string, syncDelete: boolean) => {

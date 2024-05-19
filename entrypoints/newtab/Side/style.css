@@ -1,0 +1,45 @@
+.side-tag {
+    padding-left: 24px;
+    /* margin-bottom: 0px; */
+}
+
+
+.side-logo {
+    /* color: #fff; */
+    font-size: 24px;
+    padding-left: 12px;
+}
+
+
+
+.ant-tree .ant-tree-treenode {
+    width: 100%;
+    padding: 2px 0;
+    border-radius: 6px;
+
+
+    &:hover {
+        color: #fff;
+        background-color: #FF6500;
+        transition: color 0.3 ease-in-out;
+    }
+}
+
+.ant-tree .ant-tree-node-content-wrapper {
+    width: 100%;
+    padding: 2px 0;
+
+    &:hover {
+        color: #fff;
+        background-color: #FF6500;
+    }
+}
+
+.ant-tree-treenode.ant-tree-treenode-selected {
+    background-color: #FF6500;
+    color: #fff;
+}
+
+.ant-tree .ant-tree-switcher {
+    line-height: 28px;
+}

@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Input, Tag, TreeSelect, Button, Select, Checkbox } from 'antd';
 import { FolderOutlined } from '@ant-design/icons';
 import { getActiveTab, getAllBookmarks, findParentNodeByUrl } from './utils';
-import { getCurrentI18n } from '../common/i18n/language';
+import { getCurrentI18n } from '@/entrypoints/common/i18n/language';
 import { handleNew, handleRemove, handleUpdate, handleSearch } from './Action';
 
 const LinkCard = ({ data, title, desc }) => {
@@ -20,7 +20,7 @@ const getOnlyFolders = (nodes) => {
     return nodes && nodes?.filter((item) => !item.url)
 }
 
-const renderTreeNodes = (data: BookmarkTreeNode[]) =>
+const renderTreeNodes = (data) =>
     data.map((node) => {
         if (getOnlyFolders(node.children)?.length > 0) {
             return {
@@ -41,7 +41,11 @@ const renderTreeNodes = (data: BookmarkTreeNode[]) =>
 const MyForm = () => {
     const [form] = Form.useForm();
     const [allBookMarks, setAllBookMarks] = React.useState([])
-    const [tabInfo, setTabInfo] = React.useState({})
+    const [tabInfo, setTabInfo] = React.useState<{
+        url: string
+        title: string
+        favIconUrl: string
+    } | {}>({})
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [existNode, setExistNode] = React.useState(null)
 
@@ -56,7 +60,7 @@ const MyForm = () => {
 
             if (searchRes) {
                 // 解构，避免引用值
-                setExistNode({...searchRes})
+                setExistNode({ ...searchRes })
                 form.setFieldsValue({
                     ...tabInfo,
                     ...searchRes,
@@ -78,8 +82,10 @@ const MyForm = () => {
     }
 
     const checkNode = async () => {
+        console.log('checknode', tabInfo)
+
         const res = await handleSearch(tabInfo?.url)
-        setExistNode({...res})
+        setExistNode({ ...res })
     }
 
     const updateAllBMS = async () => {
@@ -90,13 +96,30 @@ const MyForm = () => {
         await checkNode()
     }
 
-    const onFinish = async (values) => {
+    interface FormValues {
+        title: string;
+        url: string;
+        parentId?: string;
+        syncDelete?: boolean;
+        note?: string;
+        tags?: Array<string>;
+        isHome?: boolean
+    }
+
+    const onFinish = async (values: FormValues) => {
         setIsSubmitting(true)
+
+        const savedValues: FormValues = {
+            ...tabInfo,
+            ...values
+        }
+
+        console.log('开始保存', existNode, savedValues)
 
         // TODO: 查重
         // 更新逻辑（更新 url path 也都 OK 的）
         // path 对应 remove 方法
-        const res = existNode?.id ? await handleUpdate(values, { ...existNode } ) : await handleNew(values)
+        const res = existNode?.id ? await handleUpdate(savedValues, { ...existNode }) : await handleNew(savedValues)
 
         setIsSubmitting(false)
 
@@ -206,6 +229,15 @@ const MyForm = () => {
                         placeholder='选择书签存放位置'
                     />
                 </Form.Item>
+                <Form.Item
+                    name="isHome"
+                    valuePropName="checked"
+                    wrapperCol={{ offset: 4, span: 16 }}
+                >
+                    <Checkbox>首页展示</Checkbox>
+                </Form.Item>
+                <br />
+                <br />
                 <Form.Item>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', textAlign: 'right' }}>
                         {existNode?.id ?

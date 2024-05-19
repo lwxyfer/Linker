@@ -13,10 +13,18 @@ export default defineConfig({
         "storage",
         "scripting",
         "activeTab",
-        "actions"
+        "actions",
+        "favicon"
     ],
     "action": {
       "default_popup": "popup.html"
-    }
+    },
+    "web_accessible_resources": [
+      {
+        "resources": ["_favicon/*"],
+        "matches": ["<all_urls>"],
+        "extension_ids": ["*"]
+      }
+    ]
   }
 });

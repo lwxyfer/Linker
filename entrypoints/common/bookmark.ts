@@ -66,7 +66,6 @@ class MockChromeBookmarks {
         return chrome.storage.local.set({ [this.storageKey]: this.bookmarks });
     }
 
-
     async initData(): Promise<void> {
         const storedBookmarks = await this.getStorageData()
 
@@ -104,6 +103,11 @@ class MockChromeBookmarks {
         this.nextId = this.bookmarks.length > 0 ? Math.max(...this.bookmarks.map(bookmark => parseInt(bookmark.id))) + 1 : 1;
     }
 
+    // 存储和内存数据同步获取才行
+    async getList(): Promise<Bookmark[]> {
+        return this.bookmarks;
+    }
+
     async create(bookmark: Bookmark): Promise<Bookmark> {
         const res = await chrome.bookmarks.create(formateData(bookmark));
 
@@ -118,6 +122,10 @@ class MockChromeBookmarks {
     }
 
     async get(id: string): Promise<Bookmark | undefined> {
+        return this.bookmarks.find(bookmark => bookmark.id === id);
+    }
+
+    syncGet(id: string): Bookmark | undefined {
         return this.bookmarks.find(bookmark => bookmark.id === id);
     }
 
@@ -181,11 +189,13 @@ class MockChromeBookmarks {
     }
 
     async search(query: string): Promise<Bookmark[]> {
-        return this.bookmarks.filter(bookmark => bookmark.title.includes(query) || (bookmark.url && bookmark.url.includes(query)));
+        // return this.bookmarks.filter(bookmark => bookmark.title.includes(query) || (bookmark.url && bookmark.url.includes(query)));
+        return this.bookmarks.filter(bookmark => bookmark.url === query);
     }
 
-    async searchFirst(query: string): Promise<Bookmark[]> {
-        return this.bookmarks.filter(bookmark => bookmark.title.includes(query) || (bookmark.url && bookmark.url.includes(query)))?.[0]
+    async searchFirst(query: string): Promise<Bookmark> {
+        // return this.bookmarks.filter(bookmark => bookmark.title.includes(query) || (bookmark.url && bookmark.url.includes(query)))?.[0]
+        return this.bookmarks.filter(bookmark => bookmark.url === query)?.[0]
     }
 
     async update(id: string, changes: { title?: string; url?: string }): Promise<Bookmark | null> {

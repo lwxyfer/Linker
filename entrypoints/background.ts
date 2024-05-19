@@ -2,15 +2,32 @@ export default defineBackground(() => {
   console.log('Hello background!', { id: browser.runtime.id });
   console.log('Hello background!2 ', chrome.action);
 
+  const setIcon = (tab) => {
+    const storageKey = 'chromeBookmarks';
+    chrome.storage.local.get(storageKey, (result) => {
+      const data = result[storageKey] || [];
+      const hasBookmark = data.some((bookmark: any) => bookmark.url === tab.url);
 
-  chrome.action.onClicked.addListener((tab) => {
-    // 在当前活动标签页执行Content Script来获取OG信息
-    console.log('send message ？？？？？？？？')
+      // console.log('saved storage', hasBookmark)
 
-    chrome.tabs.executeScript(tab.id, { file: 'content.ts' }, () => {
-      // 向Content Script发送消息以获取OG信息
-      chrome.tabs.sendMessage(tab.id, { action: 'getOGInfo' });
+      if (hasBookmark) {
+        chrome.action.setIcon({ path: 'icon/128x128.png' });
+      } else {
+        chrome.action.setIcon({ path: 'icon/128.png' });
+      }
+    })
+  }
+
+  chrome.tabs.onActivated.addListener(function (activeInfo) {
+
+    chrome.tabs.get(activeInfo.tabId, function (tab) {
+      if (tab.url) {
+        setIcon(tab)
+      }
     });
-  });
+  })
 
-});
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    setIcon(tab)
+  });
+})
