@@ -5,11 +5,16 @@ import {
     PieChartOutlined,
     TeamOutlined,
     UserOutlined,
-    FolderOutlined
+    FolderOutlined,
+    FolderFilled,
+    QuestionCircleOutlined
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Layout, Menu, theme, Tree } from 'antd';
+import { Layout, Menu, theme, Tree, Tooltip } from 'antd';
 import { DataContext, DataContextInterface } from '../Context'
+import logoImg from '@/public/icon/128.png'
+import { getCurrentI18n } from '@/entrypoints/common/i18n/language';
+
 
 import './style.css'
 
@@ -50,45 +55,84 @@ const renderTreeNodes = (data) =>
                 title: node.title,
                 key: node.id,
                 children: renderTreeNodes(getOnlyFolders(node.children)),
-                icon: <FolderOutlined style={{fontSize: 18}} />
+                icon: <FolderFilled style={{ fontSize: 16, }} />
             };
         }
         return {
             title: node.title,
             key: node.id,
-            icon: <FolderOutlined style={{ fontSize: 18 }} />
+            icon: <FolderFilled style={{ fontSize: 16, }} />
         };
     });
 
 
 
 const Side: React.FC = () => {
-    const { list, onActiveIdChange } = React.useContext<DataContextInterface | undefined>(DataContext) || { list: [] };
+    const { list, onActiveIdChange, onTagChange, activeTag, activeId } = React.useContext<DataContextInterface>(DataContext) ?? { list: [] };
     const tree = list2Tree(list);
+    const treeData = renderTreeNodes(tree);
+    const [activeType, setActiveType] = React.useState<'node' | 'tag'>('node');
+    const [expandedKeys, setExpandedKeys] = React.useState<string[]>(undefined);
 
-    const treeData = renderTreeNodes(tree)
+    const getAllTags = (): string[] => {
+        const tags = [...new Set(list.flatMap((item) => item?.tags ?? []))];
+        return tags;
+    }
 
-    const handleMenuClick = (selectedKeys, info) => {
-        console.log('Menu item clicked:', selectedKeys, info);
+    const tags = getAllTags();
 
-        onActiveIdChange?.(selectedKeys?.[0])
+    const handleMenuClick = (selectedKeys: React.Key[], info: any) => {
+        onActiveIdChange?.(selectedKeys[0]);
+        onTagChange('');
+        setActiveType('node');
     };
 
+    const handleTagClick = (tag: string) => {
+        onTagChange(tag);
+        onActiveIdChange('');
+        setActiveType('tag');
+    }
+
+    const handleExpand = (expandedKeys) => {
+        console.log('expandedKeys', expandedKeys)
+        setExpandedKeys(expandedKeys);
+    }
+
+    const defaultExpandedKeys = treeData.map((item) => item.key);
+
+
     return (
-        <div>
-            <div className="side-logo">BMP</div>
-            <h4 className='side-tag'>书签目录</h4>
-            <div style={{paddingLeft: 6, paddingRight: 6}}>
-                <Tree showIcon
-                    defaultSelectedKeys={['0-0-0']}
+        <div className='side'>
+            <div className="side-logo">
+                <img src={logoImg} style={{ width: '36px', height: '36px', padding: 6 }} />
+                <h3 style={{ color: '#FF6500'}}>Linker</h3>
+            </div>
+            <h4 className='side-tag-title'>{ getCurrentI18n('Catalog') }</h4>
+            <div style={{ paddingLeft: 12, paddingRight: 6 }}>
+                <Tree
+                    showIcon
                     treeData={treeData}
                     onSelect={handleMenuClick}
+                    defaultSelectedKeys={['0-0-0']}
+                    selectedKeys={[activeId]}
                     blockNode
+                    onExpand={handleExpand}
+                    expandedKeys={expandedKeys || defaultExpandedKeys}
                 />
             </div>
-            
             <div className='side-tag'>
-                <h4>标签列表</h4>
+                <h4 className='side-tag-title'>{getCurrentI18n('Tags')} <Tooltip title={getCurrentI18n('TagTip')}>
+                    <QuestionCircleOutlined /></Tooltip></h4>
+                {
+                    tags?.map((tag) => {
+                        return (
+                            <div key={tag} className={`side-tag-item ${activeType === 'tag' && tag === activeTag ? 'side-tag-item-active' : ''}`} onClick={() => handleTagClick(tag)}>
+                                <span className='side-tab-pointer' />
+                                <span>{tag}</span>
+                            </div>
+                        );
+                    })
+                }
             </div>
         </div>
     );

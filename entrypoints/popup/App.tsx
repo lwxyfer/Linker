@@ -3,13 +3,18 @@ import './App.css';
 import Add from './CreateForm'
 
 function App() {
-  React.useEffect(() => {
+  // const [url, setUrl] = useState('');
 
-    // chrome.tabs.executeScript(tab.id, { file: 'content.ts' }, () => {
-    //   // 向Content Script发送消息以获取OG信息
-    //   chrome.tabs.sendMessage(tab.id, { action: 'getOGInfo' });
-    // });
-  }, [])
+  // React.useEffect(() => {
+  //   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  //     const tab = tabs[0];
+  //     setUrl(tab.url);
+  //   });
+  // }, []);
+
+  // if (url.startsWith('chrome://')) {
+  //   return <div>请到网页添加</div>;
+  // }
 
   return (
     <>

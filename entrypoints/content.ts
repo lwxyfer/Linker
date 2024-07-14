@@ -1,7 +1,7 @@
 export default defineContentScript({
   matches: ['*://*.google.com/*'],
   main() {
-    console.log('Hello content.');
+    // console.log('Hello content.');
 
     // 获取页面上的所有OG标签
     function getAllOGTags() {

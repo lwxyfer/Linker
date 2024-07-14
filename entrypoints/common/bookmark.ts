@@ -1,15 +1,7 @@
-interface Bookmark {
-    id: string;
-    parentId: string;
-    title: string;
-    url?: string;
-    children?: Bookmark[];
-    dateAdded?: number;
-    index: number;
-}
 
-function flattenBookmarks(bookmarks: Bookmark[]): Bookmark[] {
-    let flat: Bookmark[] = [];
+
+function flattenBookmarks(bookmarks: BookmarkNode[]): BookmarkNode[] {
+    let flat: BookmarkNode[] = [];
 
     for (let i = 0; i < bookmarks.length; i++) {
         let bookmark = bookmarks[i];
@@ -45,7 +37,7 @@ const formateData = (data) => {
 
 class MockChromeBookmarks {
     private readonly storageKey: string = 'chromeBookmarks';
-    private bookmarks: Bookmark[];
+    private bookmarks: BookmarkNode[];
     private nextId: number;
 
     constructor() {
@@ -66,10 +58,55 @@ class MockChromeBookmarks {
         return chrome.storage.local.set({ [this.storageKey]: this.bookmarks });
     }
 
+
+    // 将  chrome 书签栏数据和 MockChromeBookmarks 数据进行比较
+    async diffData() {
+        const currentBookmarks = await this.getStorageData()
+        const bookmarks = await new Promise<chrome.bookmarks.BookmarkTreeNode[]>((resolve) => {
+            chrome.bookmarks.getTree(resolve);
+        });
+
+        // NOTE: 0 的取值还是研究下
+        const chromeBookmarks: BookmarkNode[] = flattenBookmarks(bookmarks?.[0]?.children) || [];
+
+        // console.log("读取的数据", chromeBookmarks, currentBookmarks)
+
+        if (chromeBookmarks.length === currentBookmarks.length && [this.bookmarks || []]?.length === 0) {
+            this.bookmarks = chromeBookmarks || [];
+
+            return Promise.resolve()
+        }
+
+        if (chromeBookmarks.length !== currentBookmarks.length || !this.bookmarks || this.bookmarks?.length === 0) {
+            const urlListWithData: Record<string, { tags: string[]; note?: string; createdTime: number; updatedTime: number }> = {};
+            currentBookmarks.forEach((item) => {
+                urlListWithData[item.url] = {
+                    tags: item.tags || [],
+                    note: item.note,
+                    createdTime: item.createdTime,
+                    updatedTime: item.updatedTime,
+                };
+            });
+
+            chromeBookmarks.forEach((item) => {
+                if (urlListWithData[item?.url]) {
+                    item = {
+                        ...item,
+                        ...urlListWithData[item?.url],
+                    }
+                }
+            });
+
+            this.bookmarks = chromeBookmarks || [];
+
+            await this.saveBookmarksToStorage()
+        }
+    }
+
     async initData(): Promise<void> {
         const storedBookmarks = await this.getStorageData()
 
-        console.log('书签类初始化数据', storedBookmarks)
+        // console.log('Local 书签类初始化数据', storedBookmarks)
 
         if (!storedBookmarks || storedBookmarks?.length === 0) {
             const bookmarks = await new Promise<chrome.bookmarks.BookmarkTreeNode[]>((resolve) => {
@@ -83,10 +120,14 @@ class MockChromeBookmarks {
             // 从书签栏同步到  storage 中
             await this.saveBookmarksToStorage()
             return;
+        } else {
+            await this.diffData()
+
+            return Promise.resolve()
         }
 
-        this.bookmarks = storedBookmarks ? storedBookmarks : [];
-        this.nextId = this.bookmarks.length > 0 ? Math.max(...this.bookmarks.map(bookmark => parseInt(bookmark.id))) + 1 : 1;
+        // this.bookmarks = storedBookmarks ? storedBookmarks : [];
+        // this.nextId = this.bookmarks.length > 0 ? Math.max(...this.bookmarks.map(bookmark => parseInt(bookmark.id))) + 1 : 1;
     }
 
     async importData(): Promise<void> {
@@ -104,11 +145,11 @@ class MockChromeBookmarks {
     }
 
     // 存储和内存数据同步获取才行
-    async getList(): Promise<Bookmark[]> {
+    async getList(): Promise<BookmarkNode[]> {
         return this.bookmarks;
     }
 
-    async create(bookmark: Bookmark): Promise<Bookmark> {
+    async create(bookmark: BookmarkNode): Promise<BookmarkNode> {
         const res = await chrome.bookmarks.create(formateData(bookmark));
 
         // 保持使用同一个 ID
@@ -121,26 +162,26 @@ class MockChromeBookmarks {
         return bookmark;
     }
 
-    async get(id: string): Promise<Bookmark | undefined> {
+    async get(id: string): Promise<BookmarkNode | undefined> {
         return this.bookmarks.find(bookmark => bookmark.id === id);
     }
 
-    syncGet(id: string): Bookmark | undefined {
+    syncGet(id: string): BookmarkNode | undefined {
         return this.bookmarks.find(bookmark => bookmark.id === id);
     }
 
-    async getChildren(parentId: string): Promise<Bookmark[]> {
+    async getChildren(parentId: string): Promise<BookmarkNode[]> {
         return this.bookmarks.filter(bookmark => bookmark.parentId === parentId);
     }
 
-    async getRecent(numberOfItems: number): Promise<Bookmark[]> {
+    async getRecent(numberOfItems: number): Promise<BookmarkNode[]> {
         return this.bookmarks.slice(-numberOfItems);
     }
 
-    async getSubTree(id: string): Promise<Bookmark[]> {
+    async getSubTree(id: string): Promise<BookmarkNode[]> {
         const rootBookmark = this.bookmarks.find(bookmark => bookmark.id === id);
         if (rootBookmark) {
-            const populateChildren = (bookmark: Bookmark): Bookmark => {
+            const populateChildren = (bookmark: BookmarkNode): BookmarkNode => {
                 bookmark.children = this.bookmarks.filter(child => child.parentId === bookmark.id);
                 return bookmark;
             };
@@ -149,16 +190,16 @@ class MockChromeBookmarks {
         return [];
     }
 
-    async getTree(): Promise<Bookmark[]> {
+    async getTree(): Promise<BookmarkNode[]> {
         const rootBookmarks = this.bookmarks.filter(bookmark => !bookmark.parentId || bookmark.parentId === '0');
-        const populateChildren = (bookmark: Bookmark): Bookmark => {
+        const populateChildren = (bookmark: BookmarkNode): BookmarkNode => {
             bookmark.children = this.bookmarks.filter(child => child.parentId === bookmark.id);
             return bookmark;
         };
         return rootBookmarks.map(populateChildren);
     }
 
-    async move(id: string, destination: { parentId: string }): Promise<Bookmark | null> {
+    async move(id: string, destination: { parentId: string }): Promise<BookmarkNode | null> {
         const bookmark = this.bookmarks.find(bookmark => bookmark.id === id);
         if (bookmark) {
             bookmark.parentId = destination.parentId;
@@ -188,17 +229,17 @@ class MockChromeBookmarks {
         }
     }
 
-    async search(query: string): Promise<Bookmark[]> {
+    async search(query: string): Promise<BookmarkNode[]> {
         // return this.bookmarks.filter(bookmark => bookmark.title.includes(query) || (bookmark.url && bookmark.url.includes(query)));
         return this.bookmarks.filter(bookmark => bookmark.url === query);
     }
 
-    async searchFirst(query: string): Promise<Bookmark> {
+    async searchFirst(query: string): Promise<BookmarkNode> {
         // return this.bookmarks.filter(bookmark => bookmark.title.includes(query) || (bookmark.url && bookmark.url.includes(query)))?.[0]
         return this.bookmarks.filter(bookmark => bookmark.url === query)?.[0]
     }
 
-    async update(id: string, changes: { title?: string; url?: string }): Promise<Bookmark | null> {
+    async update(id: string, changes: { title?: string; url?: string }): Promise<BookmarkNode | null> {
         const bookmark = this.bookmarks.find(bookmark => bookmark.id === id);
         if (bookmark) {
             Object.assign(bookmark, changes);
@@ -216,7 +257,7 @@ class MockChromeBookmarks {
 
 // 使用示例
 const mockChromeBookmarks = new MockChromeBookmarks();
-await mockChromeBookmarks.initData()
+// mockChromeBookmarks.initData()
 
 
 export default mockChromeBookmarks

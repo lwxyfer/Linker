@@ -26,14 +26,14 @@ const App: React.FC = () => {
   return (
     <ContextProvider>
       <Layout style={{ minHeight: '100vh' }} hasSider>
-        <Sider theme={'light'} collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)} 
+        <Sider theme={'light'}  collapsed={collapsed} onCollapse={(value) => setCollapsed(value)} 
           style={{ overflow: 'auto', height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0 }}  
           width={240}
         >
           <Side />
         </Sider>
         <Layout style={{ marginLeft: 240 }}>
-          <Content style={{ margin: '0 16px', background: colorBgContainer }}>
+          <Content style={{ margin: '0 6px', background: colorBgContainer }}>
             <Hero />
             <GroupList />
           </Content>

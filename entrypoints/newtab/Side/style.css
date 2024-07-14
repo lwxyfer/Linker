@@ -1,45 +1,89 @@
-.side-tag {
-    padding-left: 24px;
-    /* margin-bottom: 0px; */
+:root {
+    
+    --color-primary: #FF6500;
+    --color-bg-selected: rgb(239 239 239 / 100%);
 }
 
+.side {
+    h4 {
+        margin-bottom: 6px;
+    }
+}
 
-.side-logo {
-    /* color: #fff; */
-    font-size: 24px;
+.side-tag-title {
     padding-left: 12px;
 }
 
+.side-logo {
+    font-size: 18px;
+    padding-left: 12px;
+    display: flex;
+    align-items: center;
+}
 
+.side-tag-item {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    line-height: 32px;
+    margin: 0 6px 3px 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    padding-left: 6px;
 
-.ant-tree .ant-tree-treenode {
+    &:hover {
+        color: var(--color-primary);
+        background-color: var(--color-bg-selected);
+
+        .side-tab-pointer {
+            background-color: var(--color-primary);
+        }
+    }
+}
+
+.side-tag-item-active {
+    color: var(--color-primary);
+    background-color: var(--color-bg-selected);
+
+    .side-tab-pointer {
+        background-color: var(--color-primary);
+    }
+}
+
+.side-tab-pointer {
+    display: inline-block;
+    height: 6px;
+    width: 6px;
+    border-radius: 100px;
+    background-color: var(--color-bg-selected);
+    margin: 0 6px;
+}
+
+.ant-tree .ant-tree-treenode,
+.ant-tree .ant-tree-node-content-wrapper {
     width: 100%;
     padding: 2px 0;
     border-radius: 6px;
 
-
     &:hover {
-        color: #fff;
-        background-color: #FF6500;
+        color: var(--color-primary);
+        background-color: var(--color-bg-selected);
         transition: color 0.3 ease-in-out;
     }
 }
 
-.ant-tree .ant-tree-node-content-wrapper {
-    width: 100%;
-    padding: 2px 0;
-
-    &:hover {
-        color: #fff;
-        background-color: #FF6500;
-    }
-}
-
-.ant-tree-treenode.ant-tree-treenode-selected {
-    background-color: #FF6500;
-    color: #fff;
+.ant-tree-treenode.ant-tree-treenode-selected,
+.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+    background-color: var(--color-bg-selected);
+    color: var(--color-primary);
 }
 
 .ant-tree .ant-tree-switcher {
-    line-height: 28px;
+    line-height: 26px;
 }
+
+.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+    background-color: var(--color-bg-selected);
+    color: var(--color-primary);
+}
+

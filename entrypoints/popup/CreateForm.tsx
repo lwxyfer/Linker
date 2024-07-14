@@ -1,16 +1,19 @@
 import React from 'react';
 import { Form, Input, Tag, TreeSelect, Button, Select, Checkbox } from 'antd';
-import { FolderOutlined } from '@ant-design/icons';
+import { FolderOutlined, ChromeOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getActiveTab, getAllBookmarks, findParentNodeByUrl } from './utils';
-import { getCurrentI18n } from '@/entrypoints/common/i18n/language';
+import { getCurrentI18n } from '@/entrypoints/common/i18n/language.ts';
 import { handleNew, handleRemove, handleUpdate, handleSearch } from './Action';
+import bookmarkPro from '@/entrypoints/common/bookmark'
+
 
 const LinkCard = ({ data, title, desc }) => {
     return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img width={60} height={60} src={data?.favIconUrl} />
+        {
+            data?.favIconUrl ? <img width={60} height={60} src={data?.favIconUrl} /> : <ChromeOutlined style={{ fontSize: 60 }} />
+        }
         <div style={{ marginLeft: 10 }}>
             <h3 style={{ margin: 0 }}>{data.title}</h3>
-            {/* <p>描述</p> */}
         </div>
     </div>
 }
@@ -18,6 +21,20 @@ const LinkCard = ({ data, title, desc }) => {
 
 const getOnlyFolders = (nodes) => {
     return nodes && nodes?.filter((item) => !item.url)
+}
+
+const list2Tree = (bookmarks) => {
+    const rootBookmarks = bookmarks.filter(bookmark => !bookmark.parentId || bookmark.parentId === '0');
+    const populateChildren = (bookmark: Bookmark): Bookmark => {
+        bookmark.children = bookmarks.filter(child => child.parentId === bookmark.id && !child.url);
+
+        if (bookmark.children.length > 0) {
+            bookmark.children.map(populateChildren);
+        }
+
+        return bookmark;
+    };
+    return rootBookmarks.map(populateChildren);
 }
 
 const renderTreeNodes = (data) =>
@@ -47,7 +64,7 @@ const MyForm = () => {
         favIconUrl: string
     } | {}>({})
     const [isSubmitting, setIsSubmitting] = React.useState(false)
-    const [existNode, setExistNode] = React.useState(null)
+    const [existNode, setExistNode] = React.useState<any>(null)
 
     async function init() {
         try {
@@ -56,11 +73,12 @@ const MyForm = () => {
             console.log("当前页面的信息: ", tabInfo);
             console.log("已存在标签素具: ", searchRes);
 
-            setTabInfo(tabInfo)
+            setTabInfo({ ...tabInfo })
 
             if (searchRes) {
                 // 解构，避免引用值
                 setExistNode({ ...searchRes })
+
                 form.setFieldsValue({
                     ...tabInfo,
                     ...searchRes,
@@ -82,17 +100,18 @@ const MyForm = () => {
     }
 
     const checkNode = async () => {
-        console.log('checknode', tabInfo)
-
+        
+        const tabInfo = await getActiveTab();
         const res = await handleSearch(tabInfo?.url)
+
         setExistNode({ ...res })
     }
 
     const updateAllBMS = async () => {
-        const bms = await getAllBookmarks()
+        await bookmarkPro.initData()
+        const list = await bookmarkPro.getList()
 
-        console.log('bms', bms)
-        setAllBookMarks(bms)
+        setAllBookMarks(list)
         await checkNode()
     }
 
@@ -149,7 +168,15 @@ const MyForm = () => {
         updateAllBMS()
     }, [])
 
-    const treeData = renderTreeNodes(allBookMarks)
+    const list = list2Tree(allBookMarks)
+    const treeData = renderTreeNodes(list)
+
+    const getAllTags = (): string[] => {
+        const tags = [...new Set(allBookMarks.flatMap((item) => item?.tags ?? []))];
+        return tags;
+    }
+
+    const tags = getAllTags();
 
     return (
         <div>
@@ -188,9 +215,9 @@ const MyForm = () => {
                     label={getCurrentI18n('Note')}
                     name="note"
                     style={{ marginBottom: 8 }}
-                    rules={[{ required: true, message: getCurrentI18n('Please input the description!') }]}
+                    rules={[{ message: getCurrentI18n('Please input the description!') }]}
                 >
-                    <Input.TextArea placeholder='添加任何能让你记住这个网站的信息' />
+                    <Input.TextArea placeholder={getCurrentI18n('memoryText')}  />
                 </Form.Item>
                 <Form.Item
                     label={getCurrentI18n('Tags')}
@@ -200,18 +227,11 @@ const MyForm = () => {
                     <Select
                         mode="tags"
                         style={{ width: '100%' }}
-                        placeholder="选择或者创建标签"
+                        placeholder={getCurrentI18n('tagTips')}
                         allowClear
-                        options={[
-                            {
-                                value: '首页',
-                                label: '首页'
-                            },
-                            {
-                                value: '官网',
-                                label: '官网'
-                            },
-                        ]}
+                        options={tags?.map((tag) => {
+                            return { label: tag, value: tag };
+                        }) || []}
                     />
                 </Form.Item>
                 <Form.Item
@@ -226,32 +246,40 @@ const MyForm = () => {
                         style={{ width: '100%' }}
                         dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
                         treeData={treeData}
-                        placeholder='选择书签存放位置'
+                        treeNodeFilterProp={'title'}
+                        placeholder={getCurrentI18n('selectPath')}
                     />
                 </Form.Item>
-                <Form.Item
+                {/* <Form.Item
                     name="isHome"
                     valuePropName="checked"
                     wrapperCol={{ offset: 4, span: 16 }}
                 >
-                    <Checkbox>首页展示</Checkbox>
-                </Form.Item>
+                    <Checkbox>{getCurrentI18n('selectPath')}</Checkbox>
+                </Form.Item> */}
+                {/* <Form.Item
+                    name="isChangeTitle"
+                    valuePropName="checked"
+                    wrapperCol={{ offset: 4, span: 16 }}
+                >
+                    <Checkbox>{getCurrentI18n('selectPath')}</Checkbox>
+                </Form.Item> */}
                 <br />
                 <br />
                 <Form.Item>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', textAlign: 'right' }}>
                         {existNode?.id ?
                             <div>
-                                <Button type="text" danger onClick={handleDelete} loading={isSubmitting}>
-                                    删除
+                                <Button type="text" danger onClick={handleDelete} loading={isSubmitting} icon={<DeleteOutlined />}>
+                                    {getCurrentI18n('delete')}
                                 </Button>
-                                <Form.Item
+                                {/* <Form.Item
                                     name="syncDelete"
                                     valuePropName="checked"
                                     style={{ marginBottom: 0 }}
                                 >
-                                    <Checkbox><span style={{ fontSize: 12, color: '#666' }}>同步删除浏览器书签</span></Checkbox>
-                                </Form.Item>
+                                    <Checkbox><span style={{ fontSize: 12, color: '#666' }}>{getCurrentI18n('syncDelete')}</span></Checkbox>
+                                </Form.Item> */}
                             </div> :
                             <Button type="primary" htmlType="submit" loading={isSubmitting}>
                                 {isSubmitting ? getCurrentI18n('Submitting') : getCurrentI18n('Submit')}

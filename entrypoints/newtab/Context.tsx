@@ -17,7 +17,9 @@ export interface DataContextInterface {
         title: string;
     }[];
     activeId: string;
+    activeTag: string;
     onActiveIdChange: (id: string) => void
+    onTagChange: (tag: string) => void
 }
 
 export const DataContext = createContext<DataContextInterface | undefined>(undefined);
@@ -49,13 +51,18 @@ const ContextProvider: React.FC = ({ children }) => {
     }, [])
 
     const [activeId, setActiveId] = React.useState('');
+    const [activeTag, setActiveTag] = React.useState('');
 
     const onActiveIdChange = (id) => {
         setActiveId(id)
     }
 
+    const onTagChange = (tag) => {
+        setActiveTag(tag)
+    }
+
     return (
-        <DataContext.Provider value={{ list, activeId, onActiveIdChange }}>
+        <DataContext.Provider value={{ list, activeId, activeTag, onActiveIdChange, onTagChange }}>
             { children }
         </DataContext.Provider>
     );

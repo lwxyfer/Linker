@@ -13,7 +13,6 @@ export default defineConfig({
         "storage",
         "scripting",
         "activeTab",
-        "actions",
         "favicon"
     ],
     "action": {
