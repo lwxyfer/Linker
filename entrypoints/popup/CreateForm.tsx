@@ -23,13 +23,13 @@ const getOnlyFolders = (nodes) => {
     return nodes && nodes?.filter((item) => !item.url)
 }
 
-const list2Tree = (bookmarks) => {
+const list2Tree = (bookmarks: BookmarkNode[]): BookmarkNode[] => {
     const rootBookmarks = bookmarks.filter(bookmark => !bookmark.parentId || bookmark.parentId === '0');
-    const populateChildren = (bookmark: Bookmark): Bookmark => {
+    const populateChildren = (bookmark: BookmarkNode): BookmarkNode => {
         bookmark.children = bookmarks.filter(child => child.parentId === bookmark.id && !child.url);
 
         if (bookmark.children.length > 0) {
-            bookmark.children.map(populateChildren);
+            bookmark.children = bookmark.children.map(populateChildren);
         }
 
         return bookmark;
@@ -57,18 +57,19 @@ const renderTreeNodes = (data) =>
 
 const MyForm = () => {
     const [form] = Form.useForm();
-    const [allBookMarks, setAllBookMarks] = React.useState([])
+    const [allBookMarks, setAllBookMarks] = React.useState<BookmarkNode[]>([])
     const [tabInfo, setTabInfo] = React.useState<{
         url: string
         title: string
         favIconUrl: string
     } | {}>({})
     const [isSubmitting, setIsSubmitting] = React.useState(false)
-    const [existNode, setExistNode] = React.useState<any>(null)
+    const [existNode, setExistNode] = React.useState<BookmarkNode | null>(null)
 
     async function init() {
         try {
             const tabInfo = await getActiveTab();
+            await bookmarkPro.initData()
             const searchRes = await handleSearch(tabInfo?.url)
             console.log("当前页面的信息: ", tabInfo);
             console.log("已存在标签素具: ", searchRes);
@@ -89,21 +90,14 @@ const MyForm = () => {
                     parentId: '1'
                 });
             }
-
-            // chrome.scripting.executeScript(tabInfo.id, { file: 'content.ts' }, () => {
-            //     // 向Content Script发送消息以获取OG信息
-            //     // chrome.tabs.sendMessage(tab.id, { action: 'getOGInfo' });
-            // });
         } catch (error) {
             console.error("获取标签页信息时出错: ", error);
         }
     }
 
     const checkNode = async () => {
-        
         const tabInfo = await getActiveTab();
         const res = await handleSearch(tabInfo?.url)
-
         setExistNode({ ...res })
     }
 
@@ -121,29 +115,23 @@ const MyForm = () => {
         parentId?: string;
         syncDelete?: boolean;
         note?: string;
-        tags?: Array<string>;
+        tags?: string[];
         isHome?: boolean
     }
 
     const onFinish = async (values: FormValues) => {
         setIsSubmitting(true)
-
         const savedValues: FormValues = {
-            ...tabInfo,
+            ...tabInfo as { url: string; title: string; favIconUrl: string },
             ...values
         }
-
-        console.log('开始保存', existNode, savedValues)
-
         // TODO: 查重
         // 更新逻辑（更新 url path 也都 OK 的）
         // path 对应 remove 方法
         const res = existNode?.id ? await handleUpdate(savedValues, { ...existNode }) : await handleNew(savedValues)
-
         setIsSubmitting(false)
 
         if (res) {
-            // TODO: 去重
             updateAllBMS()
         }
     };
@@ -151,14 +139,13 @@ const MyForm = () => {
     const handleDelete = React.useCallback(async () => {
         // NOTE: 一个是 tab 的 ID，一个是书签的 ID，注意
         const syncDelete = form.getFieldValue('syncDelete')
-        const res = handleRemove(existNode?.id, syncDelete)
-
-        if (res) {
+        if (existNode?.id) {
+            const res = await handleRemove(existNode.id, syncDelete)
             updateAllBMS()
         }
-    }, [existNode?.id])
+    }, [existNode?.id, form])
 
-    const onChange = (changedValues, allValues) => {
+    const onChange = (changedValues: any, allValues: FormValues) => {
         // 保存后也会存在修改字段值的 case
         onFinish(allValues)
     }
@@ -217,7 +204,7 @@ const MyForm = () => {
                     style={{ marginBottom: 8 }}
                     rules={[{ message: getCurrentI18n('Please input the description!') }]}
                 >
-                    <Input.TextArea placeholder={getCurrentI18n('memoryText')}  />
+                    <Input.TextArea placeholder={getCurrentI18n('memoryText')} />
                 </Form.Item>
                 <Form.Item
                     label={getCurrentI18n('Tags')}

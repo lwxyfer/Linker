@@ -85,7 +85,6 @@ const Group: React.FC = () => {
                 }
                 {
                 Object.entries(groupTags).map(([key, group]) => {
-                    console.log('key', key, group)
                     return (
                         <div className='group-block' id={key} key={key}>
                             <h3>{key}</h3>

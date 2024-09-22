@@ -6,7 +6,7 @@ const formateData = (data: BookmarkNode): BookmarkNode => {
     const title = data.title;
     const note = data?.note
     const tagString = data.tags?.map((tag: string) => '#' + tag).join(' ')
-    const titleCompose = [title, note, tagString].filter((i) => i).join(' - ')
+    const titleCompose = [title, tagString].filter((i) => i).join(' - ')
 
     return {
         ...data,
@@ -47,6 +47,7 @@ export const handleUpdate = async (newValue, oldValue) => {
 export const handleSearch = async (url) => {
     if (url) {
         const res = await bookmarkPro.searchFirst(url)
+
         return res
     }
     return {}

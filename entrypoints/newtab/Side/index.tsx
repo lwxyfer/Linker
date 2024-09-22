@@ -55,7 +55,7 @@ const renderTreeNodes = (data) =>
                 title: node.title,
                 key: node.id,
                 children: renderTreeNodes(getOnlyFolders(node.children)),
-                icon: <FolderFilled style={{ fontSize: 16, }} />
+                icon: <FolderFilled style={{ fontSize: 16,}} />
             };
         }
         return {
@@ -65,6 +65,15 @@ const renderTreeNodes = (data) =>
         };
     });
 
+
+function getRandomColor() {
+    // Generate a random color in hexadecimal format
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = Math.floor(Math.random() * 30) + 70; // 70-100%
+    const lightness = Math.floor(Math.random() * 20) + 40; // 40-60%
+    
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
 
 
 const Side: React.FC = () => {
@@ -127,7 +136,7 @@ const Side: React.FC = () => {
                     tags?.map((tag) => {
                         return (
                             <div key={tag} className={`side-tag-item ${activeType === 'tag' && tag === activeTag ? 'side-tag-item-active' : ''}`} onClick={() => handleTagClick(tag)}>
-                                <span className='side-tab-pointer' />
+                                <span className='side-tab-pointer'/>
                                 <span>{tag}</span>
                             </div>
                         );

@@ -9,7 +9,7 @@ import mock from '../common/mock.ts'
 import { isZH } from '@/entrypoints/common/utils.ts'
 
 
-mock()
+// mock()
 
 
 const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;

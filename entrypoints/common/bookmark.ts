@@ -65,15 +65,10 @@ class MockChromeBookmarks {
         const bookmarks = await new Promise<chrome.bookmarks.BookmarkTreeNode[]>((resolve) => {
             chrome.bookmarks.getTree(resolve);
         });
-
-        // NOTE: 0 的取值还是研究下
         const chromeBookmarks: BookmarkNode[] = flattenBookmarks(bookmarks?.[0]?.children) || [];
 
-        // console.log("读取的数据", chromeBookmarks, currentBookmarks)
-
-        if (chromeBookmarks.length === currentBookmarks.length && [this.bookmarks || []]?.length === 0) {
-            this.bookmarks = chromeBookmarks || [];
-
+        if (chromeBookmarks.length === currentBookmarks.length && (this.bookmarks || [])?.length === 0) {
+            this.bookmarks = currentBookmarks || [];
             return Promise.resolve()
         }
 
@@ -100,13 +95,15 @@ class MockChromeBookmarks {
             this.bookmarks = chromeBookmarks || [];
 
             await this.saveBookmarksToStorage()
+            return Promise.resolve()
         }
+
+        // Storage 作为多 tab 改动进行数据更新
+        this.bookmarks = currentBookmarks;
     }
 
     async initData(): Promise<void> {
         const storedBookmarks = await this.getStorageData()
-
-        // console.log('Local 书签类初始化数据', storedBookmarks)
 
         if (!storedBookmarks || storedBookmarks?.length === 0) {
             const bookmarks = await new Promise<chrome.bookmarks.BookmarkTreeNode[]>((resolve) => {
