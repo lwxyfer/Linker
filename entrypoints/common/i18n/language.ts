@@ -24,7 +24,7 @@ const i18nMap = {
     'searchTipMac': { en: 'Find Your Link（⌘ + F）', zh: '查找链接（⌘ + F）' },
     'searchTipWin': { en: 'Find Your Link（Ctrl + F）', zh: '查找链接（Ctrl + F）' },
     'searchPlaceholder': { en: 'Just Input', zh: '随便输入点' },
-    'TagTip': { en: 'Add tags when add Site', zh: '添加链接时可增加标签' },
+    'TagTip': { en: 'Tags can be added when saving a link. The plugin can be activated using keyboard shortcuts (Windows: Ctrl+Shift+K, Mac: Command+Shift+K)', zh: '添加链接时可增加标签，可通过快捷键唤醒插件（Windows: Ctrl+Shift+K, Mac: Command+Shift+K）' },
 };
 
 

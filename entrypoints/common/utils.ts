@@ -1,6 +1,9 @@
 
 
 // get facicon
+
+import COMMAND_MAP from "./commands";
+
 // https://github.com/faviconkit/javascript-api
 export const getFavicon = (url, size = 32) => {
     const favIconUrl = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=${32}`;
@@ -68,3 +71,6 @@ function diffTrees(oldTree: TreeNode | undefined, newTree: TreeNode | undefined)
 }
 
 
+export const getCommandFn = (command: string) => {
+    return COMMAND_MAP[command] || (() => {})
+}
