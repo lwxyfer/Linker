@@ -13,7 +13,8 @@ export default defineConfig({
         "storage",
         "scripting",
         "activeTab",
-        "favicon"
+        "favicon",
+        "commands"  // 允许插件访问键盘和鼠标
     ],
     "action": {
       "default_popup": "popup.html"
@@ -24,6 +25,16 @@ export default defineConfig({
         "matches": ["<all_urls>"],
         "extension_ids": ["*"]
       }
-    ]
+    ],
+    // 添加 快捷键 配置
+    "commands": {
+      "show_popup": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+K",
+          "mac": "Command+Shift+K"
+        },
+        "description": "Toggle feature"
+      }
+    }
   }
 });

@@ -1,3 +1,6 @@
+import COMMAND_MAP, { CommandTypes } from "./common/commands";
+import { getCommandFn } from "./common/utils";
+
 export default defineBackground(() => {
   // console.log('Hello background!', { id: browser.runtime.id });
   // console.log('Hello background!2 ', chrome.action);
@@ -26,5 +29,11 @@ export default defineBackground(() => {
 
   chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     setIcon(tab)
+  });
+
+  /** 快捷键唤醒插件 */
+  chrome.commands.onCommand.addListener((command) => {
+     const commandFn = getCommandFn(command)
+     commandFn(command)
   });
 })
